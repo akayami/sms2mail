@@ -103,6 +103,31 @@ Generate profile config template:
 3.  In Twilio, set the webhook to:
     `http://<your-server-ip>:8080/sms/myphone`
 
+## Linux Systemd Installation
+
+1.  Copy the binary to `/usr/local/bin`:
+    ```bash
+    sudo cp sms2mail-linux-amd64 /usr/local/bin/sms2mail
+    sudo chmod +x /usr/local/bin/sms2mail
+    ```
+
+2.  Copy the service file:
+    ```bash
+    sudo cp sms2mail.service /etc/systemd/system/
+    ```
+
+3.  Reload systemd and enable the service:
+    ```bash
+    sudo systemctl daemon-reload
+    sudo systemctl enable sms2mail
+    sudo systemctl start sms2mail
+    ```
+
+4.  Check status:
+    ```bash
+    sudo systemctl status sms2mail
+    ```
+
 ## License
 
 [MIT](LICENSE)
