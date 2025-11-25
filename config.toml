@@ -1,0 +1,7 @@
+# Server settings
+server_port = ":8080"
+
+# Email Configuration
+# Ensure this 'From' address is allowed by your msmtp configuration (provider)
+email_from = "akayami@gmail.com"
+email_to = "akayami@gmail.com,tomasz@akayami.com"
