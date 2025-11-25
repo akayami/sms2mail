@@ -36,9 +36,10 @@ jobs:
           if-no-files-found: error
 
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: ncipollo/release-action@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: bin/*
+          artifacts: "bin/*"
           draft: true
-          make_latest: false
+          makeLatest: false
+          token: ${{ secrets.GITHUB_TOKEN }}
