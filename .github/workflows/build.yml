@@ -42,4 +42,4 @@ jobs:
           artifacts: "bin/*"
           draft: true
           makeLatest: false
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_TOKEN }}
