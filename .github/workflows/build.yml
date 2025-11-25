@@ -40,3 +40,23 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: bin/*
+
+  aur:
+    name: Publish to AUR
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Publish to AUR
+        uses: KSXGitHub/github-actions-deploy-aur@v2.7.2
+        with:
+          pkgname: sms2mail
+          pkgbuild: ./aur/PKGBUILD
+          commit_username: ${{ secrets.AUR_USERNAME }}
+          commit_email: ${{ secrets.AUR_EMAIL }}
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: Update to ${{ github.ref_name }}
+          ssh_keyscan_types: rsa,dsa,ecdsa,ed25519
