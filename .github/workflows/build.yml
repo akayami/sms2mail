@@ -96,7 +96,7 @@ jobs:
           chown -R builder:builder .
           # Run as builder user with proper environment
           WORKDIR=$(pwd)
-          su builder -s /bin/bash -c "cd $WORKDIR && updpkgsums && makepkg --printsrcinfo > .SRCINFO"
+          su builder -s /bin/bash -c "export PATH=/usr/bin:\$PATH && cd $WORKDIR && updpkgsums && makepkg --printsrcinfo > .SRCINFO"
 
       - name: Commit and push to AUR
         run: |
