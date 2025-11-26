@@ -101,6 +101,7 @@ jobs:
       - name: Commit and push to AUR
         run: |
           cd aur-repo
+          git config --global --add safe.directory $(pwd)
           git add PKGBUILD .SRCINFO
           git commit -m "Update to ${{ github.ref_name }}" || echo "No changes to commit"
           git push origin master
