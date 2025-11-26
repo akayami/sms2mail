@@ -46,9 +46,14 @@ jobs:
   aur:
     name: Publish to AUR
     runs-on: ubuntu-latest
+    container: archlinux:latest
     needs: build
     if: startsWith(github.ref, 'refs/tags/')
     steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm git openssh base-devel
+
       - name: Set up SSH for AUR
         run: |
           mkdir -p ~/.ssh
@@ -76,15 +81,14 @@ jobs:
           # Reset pkgrel to 1 for new version
           sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
 
-      - name: Install tools and update checksums
+      - name: Update checksums and generate .SRCINFO
         run: |
           cd aur-repo
-          docker run --rm -v $(pwd):/pkg archlinux bash -c "
-            pacman -Syu --noconfirm base-devel
-            cd /pkg
-            chown -R nobody:nobody .
-            su nobody -s /bin/bash -c 'updpkgsums && makepkg --printsrcinfo > .SRCINFO'
-          "
+          # Create a non-root user for makepkg
+          useradd -m builder
+          chown -R builder:builder .
+          # Run as builder user
+          su builder -c 'updpkgsums && makepkg --printsrcinfo > .SRCINFO'
 
       - name: Commit and push to AUR
         run: |
