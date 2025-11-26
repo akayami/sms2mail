@@ -18,8 +18,9 @@ type GlobalConfig struct {
 }
 
 type ProfileConfig struct {
-	EmailFrom string `toml:"email_from"`
-	EmailTo   string `toml:"email_to"`
+	EmailFrom    string `toml:"email_from"`
+	EmailTo      string `toml:"email_to"`
+	MsmtpProfile string `toml:"msmtp_profile"` // Optional: msmtp account name, defaults to "default"
 }
 
 var globalConfig GlobalConfig
@@ -62,6 +63,10 @@ const profileTemplate = `# Email Configuration for profile
 # Ensure this 'From' address is allowed by your msmtp configuration (provider)
 email_from = "sms-notifier@yourserver.com"
 email_to = "youremail@example.com"
+
+# Optional: Specify which msmtp account/profile to use
+# If not specified, defaults to "default"
+# msmtp_profile = "default"
 `
 
 func main() {
@@ -211,9 +216,16 @@ func handleSMS(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendViaMsmtp(phoneFrom, messageBody string, config *ProfileConfig) error {
-	// We use "msmtp" with the "-t" flag.
+	// Determine which msmtp profile/account to use
+	msmtpProfile := config.MsmtpProfile
+	if msmtpProfile == "" {
+		msmtpProfile = "default"
+	}
+
+	// We use "msmtp" with the "-a" flag to specify the account and "-t" to read headers from stdin.
+	// -a specifies the msmtp account/profile to use
 	// -t tells msmtp to read the "To", "From", and "Subject" from the text we pipe in.
-	cmd := exec.Command("msmtp", "-t")
+	cmd := exec.Command("msmtp", "-a", msmtpProfile, "-t")
 
 	// Create the email content
 	var emailContent bytes.Buffer

@@ -2,3 +2,4 @@
 # Ensure this 'From' address is allowed by your msmtp configuration (provider)
 email_from = "sms-notifier@yourserver.com"
 email_to = "youremail@example.com"
+msmtp_profile = "akayami"
