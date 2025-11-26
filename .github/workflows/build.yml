@@ -49,9 +49,6 @@ jobs:
     needs: build
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
       - name: Set up SSH for AUR
         run: |
           mkdir -p ~/.ssh
@@ -66,25 +63,25 @@ jobs:
 
       - name: Clone AUR repository
         run: |
-          GIT_SSH_COMMAND="ssh -i ~/.ssh/aur" git clone ssh://aur@aur.archlinux.org/sms2mail.git aur-repo || true
-          if [ ! -d "aur-repo" ]; then
-            mkdir aur-repo
-            cd aur-repo
-            git init
-            git remote add origin ssh://aur@aur.archlinux.org/sms2mail.git
-            cd ..
-          fi
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/aur" git clone ssh://aur@aur.archlinux.org/sms2mail.git aur-repo
 
-      - name: Update PKGBUILD
+      - name: Update PKGBUILD version
         run: |
-          cp aur/PKGBUILD aur-repo/
           cd aur-repo
+          # Extract version from tag (remove 'v' prefix)
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          # Update pkgver in PKGBUILD
+          sed -i "s/^pkgver=.*/pkgver=$VERSION/" PKGBUILD
+          # Reset pkgrel to 1 for new version
+          sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
 
-      - name: Install tools and generate .SRCINFO
+      - name: Install tools and update checksums
         run: |
           sudo pacman -Syu --noconfirm base-devel
           cd aur-repo
           sudo chown -R $(whoami):$(whoami) .
+          updpkgsums
           makepkg --printsrcinfo > .SRCINFO
 
       - name: Commit and push to AUR
