@@ -52,13 +52,44 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Publish to AUR
-        uses: KSXGitHub/github-actions-deploy-aur@v2.7.2
-        with:
-          pkgname: sms2mail
-          pkgbuild: ./aur/PKGBUILD
-          commit_username: ${{ secrets.AUR_USERNAME }}
-          commit_email: ${{ secrets.AUR_EMAIL }}
-          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-          commit_message: Update to ${{ github.ref_name }}
-          ssh_keyscan_types: rsa,dsa,ecdsa,ed25519
+      - name: Set up SSH for AUR
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur
+          chmod 600 ~/.ssh/aur
+          ssh-keyscan -t rsa,ecdsa,ed25519 aur.archlinux.org >> ~/.ssh/known_hosts
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ secrets.AUR_USERNAME }}"
+          git config --global user.email "${{ secrets.AUR_EMAIL }}"
+
+      - name: Clone AUR repository
+        run: |
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/aur" git clone ssh://aur@aur.archlinux.org/sms2mail.git aur-repo || true
+          if [ ! -d "aur-repo" ]; then
+            mkdir aur-repo
+            cd aur-repo
+            git init
+            git remote add origin ssh://aur@aur.archlinux.org/sms2mail.git
+            cd ..
+          fi
+
+      - name: Update PKGBUILD
+        run: |
+          cp aur/PKGBUILD aur-repo/
+          cd aur-repo
+
+      - name: Install tools and generate .SRCINFO
+        run: |
+          sudo pacman -Syu --noconfirm base-devel
+          cd aur-repo
+          sudo chown -R $(whoami):$(whoami) .
+          makepkg --printsrcinfo > .SRCINFO
+
+      - name: Commit and push to AUR
+        run: |
+          cd aur-repo
+          git add PKGBUILD .SRCINFO
+          git commit -m "Update to ${{ github.ref_name }}" || echo "No changes to commit"
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/aur" git push origin master
