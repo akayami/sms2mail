@@ -78,11 +78,13 @@ jobs:
 
       - name: Install tools and update checksums
         run: |
-          sudo pacman -Syu --noconfirm base-devel
           cd aur-repo
-          sudo chown -R $(whoami):$(whoami) .
-          updpkgsums
-          makepkg --printsrcinfo > .SRCINFO
+          docker run --rm -v $(pwd):/pkg archlinux bash -c "
+            pacman -Syu --noconfirm base-devel
+            cd /pkg
+            chown -R nobody:nobody .
+            su nobody -s /bin/bash -c 'updpkgsums && makepkg --printsrcinfo > .SRCINFO'
+          "
 
       - name: Commit and push to AUR
         run: |
