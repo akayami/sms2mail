@@ -95,7 +95,8 @@ jobs:
           useradd -m builder
           chown -R builder:builder .
           # Run as builder user with proper environment
-          su builder -s /bin/bash -c 'cd /github/workspace/aur-repo && updpkgsums && makepkg --printsrcinfo > .SRCINFO'
+          WORKDIR=$(pwd)
+          su builder -s /bin/bash -c "cd $WORKDIR && updpkgsums && makepkg --printsrcinfo > .SRCINFO"
 
       - name: Commit and push to AUR
         run: |
