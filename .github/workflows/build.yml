@@ -56,10 +56,17 @@ jobs:
 
       - name: Set up SSH for AUR
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur
-          chmod 600 ~/.ssh/aur
-          ssh-keyscan -t rsa,ecdsa,ed25519 aur.archlinux.org >> ~/.ssh/known_hosts
+          mkdir -p /root/.ssh
+          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > /root/.ssh/aur
+          chmod 600 /root/.ssh/aur
+          ssh-keyscan -t rsa,ecdsa,ed25519 aur.archlinux.org >> /root/.ssh/known_hosts
+          # Create SSH config to use the key
+          cat > /root/.ssh/config << EOF
+          Host aur.archlinux.org
+            IdentityFile /root/.ssh/aur
+            User aur
+          EOF
+          chmod 600 /root/.ssh/config
 
       - name: Configure Git
         run: |
@@ -68,7 +75,7 @@ jobs:
 
       - name: Clone AUR repository
         run: |
-          GIT_SSH_COMMAND="ssh -i ~/.ssh/aur" git clone ssh://aur@aur.archlinux.org/sms2mail.git aur-repo
+          git clone ssh://aur@aur.archlinux.org/sms2mail.git aur-repo
 
       - name: Update PKGBUILD version
         run: |
@@ -95,4 +102,4 @@ jobs:
           cd aur-repo
           git add PKGBUILD .SRCINFO
           git commit -m "Update to ${{ github.ref_name }}" || echo "No changes to commit"
-          GIT_SSH_COMMAND="ssh -i ~/.ssh/aur" git push origin master
+          git push origin master
