@@ -28,7 +28,11 @@ jobs:
           chmod +x build.sh
           ./build.sh
 
+      # Skipped on tag pushes: the same files hit the GitHub Release (free)
+      # in the next step, while artifacts count against the 500 MB Actions
+      # storage quota (BOOK-33). PR/main runs keep the debug download.
       - name: Upload artifacts
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: actions/upload-artifact@v4
         with:
           name: sms2mail-binaries
